@@ -27,21 +27,17 @@ class Item(Resource):
         item = ItemModel(name, data['price'])
 
         try:
-            item.insert()
+            item.save_to_db()
         except:
             return {'message': 'An error occurred inserting the item!'}, 500 # INTERNAL ERROR
         
         return item.json(), 201
 
     def delete(self, name):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        item = ItemModel.search_by_name(name)
 
-        query = "DELETE FROM items WHERE name=?"
-        cursor.execute(query, (name,))
-
-        connection.commit()
-        connection.close()  
+        if item:
+            item.delete_from_db()
 
         return {'message': 'Item deleted!'}
     
@@ -49,20 +45,15 @@ class Item(Resource):
         data = Item.parser.parse_args()
 
         item = ItemModel.search_by_name(name)
-        updated_item = ItemModel(name, data['price'])
 
         if item:
-            try:
-                updated_item.update()
-            except:
-                return {'message': 'An error occurred updating and item.'}, 500
+            item.price = data['price']
         else:
-            try:
-                updated_item.insert()
-            except:
-                return {'message': 'An error occurred inserting and item.'}, 500
+            item = ItemModel(name, data['price'])
+
+        item.save_to_db()
             
-        return updated_item.json()
+        return item.json()
 
 
 class ItemList(Resource):
