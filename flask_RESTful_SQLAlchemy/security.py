@@ -1,4 +1,4 @@
-from resources.user import User
+from models.user import UserModel
 
 # users = [
 #     {
@@ -26,10 +26,10 @@ from resources.user import User
 
 
 def authenticate(username, password):
-    user = User.search_by_username(username)
+    user = UserModel.search_by_username(username)
     if user and user.password == password:
         return user
     
 def identity(payload):
     user_id = payload['identity']
-    return User.search_by_id(user_id)
+    return UserModel.search_by_id(user_id)
