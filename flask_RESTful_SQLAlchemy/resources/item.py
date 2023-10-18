@@ -9,6 +9,9 @@ class Item(Resource):
     parser.add_argument(
             'price', type=float, required=True, help='This must be filled!'
             )
+    parser.add_argument(
+            'store_id', type=int, required=True, help='Every item needs a store id'
+            )
     
     @jwt_required()
     def get(self, name):
@@ -24,7 +27,7 @@ class Item(Resource):
         
         data = Item.parser.parse_args()
 
-        item = ItemModel(name, data['price'])
+        item = ItemModel(name, data['price'], data['store_id'])
 
         try:
             item.save_to_db()
@@ -49,7 +52,7 @@ class Item(Resource):
         if item:
             item.price = data['price']
         else:
-            item = ItemModel(name, data['price'])
+            item = ItemModel(name, data['price'], data['store_id'])
 
         item.save_to_db()
             
@@ -58,17 +61,8 @@ class Item(Resource):
 
 class ItemList(Resource):
     def get(self):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        items = ItemModel.query.all()
 
-        query = "SELECT * FROM items"
-        result = cursor.execute(query)
-        items = []
-
-        for row in result:
-            items.append({'name': row[0], 'price': row[1]})
-
-        connection.close() 
-
-        return {'items': items}
+        return {'items': [item.json() for item in items]}   # -> more pythonic
+    #   return {'items': list(map(lambda x: x.json, ItemModel.query.all())) }
     
